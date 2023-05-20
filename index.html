@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>手机h5接收显示传感器数据</title>
+    <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.2/echarts.min.js"></script>
+</head>
+<body>
+<script>
+    // 连接MQTT Broker
+    const client = mqtt.connect('ws://localhost:15675/ws');
+
+    // 订阅MQTT队列
+    client.on('connect', function () {
+        client.subscribe('sensor-data');
+        client.subscribe('alarm-message');
+    });
+
+</script>
+
+<h1>传感器数据</h1>
+<!--echarts版块必须设置一个区域的大小才会显示出来，如div的style-->
+<div id="sensor1" style="width: 600px; height: 400px;"></div>
+<div id="sensor2" style="width: 600px; height: 400px;"></div>
+<div id="sensor3" style="width: 600px; height: 400px;"></div>
+<div id="sensor-data"></div>
+<h2>报警信息</h2>
+<div id="alarm-message"></div>
+
+<script>
+    var sensor1 = 0;
+    var sensor2 = 0;
+    var sensor3 = 0;
+
+    // 接收MQTT消息并在前端页面上显示
+    client.on('message', function (topic, message) {
+        if (topic === 'sensor-data') {
+            const payload = message.toString(); // 将字节序列转换为字符串
+            const decodedMessage = JSON.parse(payload); // 解码JSON字符串为JavaScript对象
+            sensor1 = decodedMessage['sensor1']
+            // console.log(sensor1)
+            sensor2 = decodedMessage['sensor2']
+            sensor3 = decodedMessage['sensor3']
+            $('#sensor-data').append('<p>' + message.toString() + '</p>');
+        } else if (topic === 'alarm-message') {
+            $('#alarm-message').append('<p>' + message.toString() + '</p>');
+            alert('发生报警：' + message.toString());
+        }
+    });
+
+    var chartDom1 = document.getElementById('sensor1');
+    var myChart1 = echarts.init(chartDom1);
+    var option1;
+
+    var chartDom2 = document.getElementById('sensor2');
+    var myChart2 = echarts.init(chartDom2);
+    var option2;
+
+    var chartDom3 = document.getElementById('sensor3');
+    var myChart3 = echarts.init(chartDom3);
+    var option3;
+
+    option1 = {
+        tooltip: {
+            formatter: '{a} <br/>{b} : {c}%'
+        },
+        series: [
+            {
+                name: 'Pressure',
+                type: 'gauge',
+                progress: {
+                    show: true
+                },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}'
+                },
+                itemStyle: {
+                  color: 'pink'
+                },
+                data: [
+                    {
+                        value: sensor1,
+                        name: 'sensor1'
+                    }
+                ]
+            }
+        ]
+    };
+
+    option2 = {
+        tooltip: {
+            formatter: '{a} <br/>{b} : {c}%'
+        },
+        series: [
+            {
+                name: 'Pressure',
+                type: 'gauge',
+                progress: {
+                    show: true
+                },
+                itemStyle: {
+                  color: 'green'
+                },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}'
+                },
+                data: [
+                    {
+                        value: sensor2,
+                        name: 'sensor2'
+                    }
+                ]
+            }
+        ]
+    };
+
+    option3 = {
+        tooltip: {
+            formatter: '{a} <br/>{b} : {c}%'
+        },
+        series: [
+            {
+                name: 'Pressure',
+                type: 'gauge',
+                progress: {
+                    show: true
+                },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}'
+                },
+                data: [
+                    {
+                        value: sensor3,
+                        name: 'sensor3'
+                    }
+                ]
+            }
+        ]
+    };
+
+    setInterval(function () {
+        myChart1.setOption({
+            series: [
+                {
+                    name: 'Pressure',
+                    data: [
+                        {
+                            value: sensor1,
+                            name: 'sensor1'
+                        }
+                    ]
+                }
+            ]
+        });
+    }, 500);
+
+    setInterval(function () {
+        myChart2.setOption({
+            series: [
+                {
+                    name: 'Pressure',
+                    data: [
+                        {
+                            value: sensor2,
+                            name: 'sensor2'
+                        }
+                    ]
+                }
+            ]
+        });
+    }, 500);
+
+    setInterval(function () {
+        myChart3.setOption({
+            series: [
+                {
+                    name: 'Pressure',
+                    data: [
+                        {
+                            value: sensor3,
+                            name: 'sensor3'
+                        }
+                    ]
+                }
+            ]
+        });
+    }, 500);
+
+    myChart1.setOption(option1);
+    myChart2.setOption(option2);
+    myChart3.setOption(option3);
+
+</script>
+
+</body>
+</html>
